@@ -1,0 +1,13 @@
+{
+  "name": "zuxcyn-motion-backend",
+  "version": "1.0.0",
+  "description": "Backend API Rendering untuk Zuxcyn Motion",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "fluent-ffmpeg": "^2.1.2"
+  }
+}
