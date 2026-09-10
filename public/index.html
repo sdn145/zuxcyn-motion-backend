@@ -3,155 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zuxcyn Motion - Studio Editor</title>
+    <title>Zuxcyn Motion Cloud Studio</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #0d0e12; color: #e1e1e6; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
+        body { background: #090a0f; color: #ffffff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* TOP NAVBAR */
-        .navbar { height: 48px; background: #16181e; border-bottom: 1px solid #272a36; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
-        .brand { font-weight: 800; font-size: 14px; letter-spacing: 1px; color: #a855f7; display: flex; align-items: center; gap: 6px; }
-        .nav-actions { display: flex; gap: 8px; }
-        .btn-nav { background: #272a36; border: none; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .btn-export-top { background: linear-gradient(135deg, #a855f7, #6366f1); }
+        /* --- SPLASH / LOADING SCREEN --- */
+        #loading-screen { position: fixed; inset: 0; background: #090a0f; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
+        .logo-glow { font-size: 32px; font-weight: 900; background: linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; margin-bottom: 20px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #1e1f29; border-top: 4px solid #a855f7; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* WORKSPACE / CANVAS */
-        .workspace { flex: 1; display: flex; align-items: center; justify-content: center; background: #050507; position: relative; overflow: hidden; padding: 10px; }
-        .canvas-box { width: 100%; max-width: 360px; height: 100%; max-height: 360px; background: #121318; border: 2px dashed #323644; border-radius: 12px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        /* --- APP PAGES SYSTEM --- */
+        .page { display: none; flex-direction: column; height: 100vh; width: 100vw; position: absolute; inset: 0; background: #090a0f; }
+        .page.active { display: flex; }
+
+        /* --- NAVBAR & BOTTOM NAV --- */
+        .top-bar { height: 50px; background: #12131a; border-bottom: 1px solid #222431; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+        .top-title { font-weight: 800; font-size: 16px; color: #a855f7; }
         
-        /* LAYERS IN CANVAS */
-        .layer-item { position: absolute; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-        .shape-mask { position: absolute; width: 150px; height: 150px; border-radius: 50%; background: rgba(56, 189, 248, 0.4); border: 2px solid #38bdf8; display: none; }
+        .bottom-nav { height: 56px; background: #12131a; border-top: 1px solid #222431; display: flex; justify-content: space-around; align-items: center; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #6b7280; font-size: 10px; font-weight: 600; cursor: pointer; }
+        .nav-item.active { color: #a855f7; }
 
-        /* CONTROL PANELS (MID TOOLBAR) */
-        .controls-panel { background: #16181e; border-top: 1px solid #272a36; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-        .panel-row { display: flex; gap: 8px; align-items: center; overflow-x: auto; padding-bottom: 4px; }
-        .panel-row::-webkit-scrollbar { display: none; }
+        /* --- PAGE 1: HOME --- */
+        .home-content { padding: 16px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+        .hero-banner { background: linear-gradient(135deg, #1e1035, #0f172a); border: 1px solid #3b0764; border-radius: 16px; padding: 20px; text-align: center; }
+        .hero-banner h2 { font-size: 20px; color: #f3e8ff; margin-bottom: 6px; }
+        .hero-banner p { font-size: 12px; color: #a855f7; margin-bottom: 16px; }
+        .btn-create { background: linear-gradient(135deg, #a855f7, #6366f1); border: none; color: #fff; padding: 12px 24px; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4); }
 
-        .tool-btn { background: #20232d; border: 1px solid #2c303e; color: #9a9caf; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+        /* --- PAGE 2: PROJECTS --- */
+        .project-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; overflow-y: auto; flex: 1; }
+        .project-card { background: #12131a; border: 1px solid #222431; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+        .project-thumb { height: 100px; background: #1a1c28; display: flex; align-items: center; justify-content: center; color: #4b5563; font-size: 24px; }
+        .project-info { padding: 10px; font-size: 12px; }
+        .project-title { font-weight: bold; color: #e5e7eb; }
+        .project-date { font-size: 10px; color: #6b7280; margin-top: 2px; }
+
+        /* --- PAGE 3: EDITOR & TIMELINE --- */
+        .editor-workspace { flex: 1; background: #050507; display: flex; align-items: center; justify-content: center; position: relative; }
+        .canvas-container { width: 300px; height: 300px; background: #12131a; border: 2px dashed #a855f7; border-radius: 12px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+        .video-layer { width: 100%; height: 100%; object-fit: contain; }
+
+        .editor-controls { background: #12131a; border-top: 1px solid #222431; padding: 12px; }
+        .controls-row { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 10px; }
+        .tool-btn { background: #1a1c28; border: 1px solid #2d3142; color: #9ca3af; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; white-space: nowrap; }
         .tool-btn.active { background: #a855f7; color: #fff; border-color: #a855f7; }
 
-        .select-custom { background: #20232d; border: 1px solid #2c303e; color: #fff; padding: 8px; border-radius: 8px; font-size: 12px; outline: none; flex: 1; }
+        .select-input { background: #1a1c28; border: 1px solid #2d3142; color: #fff; padding: 8px; border-radius: 8px; font-size: 12px; width: 100%; }
 
         /* TIMELINE TRACKS */
-        .timeline-container { height: 160px; background: #0d0e12; border-top: 1px solid #272a36; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
-        .timeline-header { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #6c7086; }
-        .tracks-wrapper { flex: 1; background: #121318; border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
-        
-        .track { height: 32px; background: #1d202a; border-radius: 6px; border: 1px solid #2a2e3d; display: flex; align-items: center; padding: 0 10px; font-size: 11px; font-weight: 600; color: #a6adc8; position: relative; }
-        .track-video { border-left: 4px solid #a855f7; }
-        .track-effect { border-left: 4px solid #38bdf8; }
-        .track-mask { border-left: 4px solid #f38ba8; }
+        .timeline-section { height: 140px; background: #090a0f; border-top: 1px solid #222431; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+        .track-list { flex: 1; background: #12131a; border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+        .track { height: 28px; background: #1a1c28; border-radius: 6px; display: flex; align-items: center; padding: 0 10px; font-size: 11px; font-weight: 600; color: #9ca3af; }
+        .track-v { border-left: 3px solid #a855f7; }
+        .track-fx { border-left: 3px solid #38bdf8; }
 
-        /* STATUS FOOTER */
-        .status-bar { height: 24px; background: #08080a; font-size: 10px; color: #38bdf8; display: flex; align-items: center; justify-content: center; border-top: 1px solid #1a1b23; }
+        .btn-export-act { background: linear-gradient(135deg, #a855f7, #6366f1); border: none; color: #fff; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; }
     </style>
 </head>
 <body>
 
-    <div class="navbar">
-        <div class="brand"><span>⚡</span> ZUXCYN STUDIO</div>
-        <div class="nav-actions">
-            <button class="btn-nav" onclick="document.getElementById('videoUploader').click()">+ Layer</button>
-            <button class="btn-nav btn-export-top" onclick="exportRender()">EXPORT</button>
+    <div id="loading-screen">
+        <div class="logo-glow">ZUXCYN MOTION</div>
+        <div class="spinner"></div>
+        <p style="margin-top: 15px; font-size: 12px; color: #6b7280;">Memuat Cloud Engine...</p>
+    </div>
+
+    <div id="page-home" class="page active">
+        <div class="top-bar">
+            <div class="top-title">⚡ ZUXCYN MOTION</div>
+        </div>
+        <div class="home-content">
+            <div class="hero-banner">
+                <h2>Buat Video Cloud Render</h2>
+                <p>Motion FX, Velocity & Color Grading V1.0</p>
+                <button class="btn-create" onclick="switchPage('editor')">+ BUAT PROYEK BARU</button>
+            </div>
+            <h3 style="font-size: 14px; color: #9ca3af;">Proyek Terakhir</h3>
+            <div style="background: #12131a; border-radius: 12px; padding: 20px; text-align: center; color: #4b5563; font-size: 12px;">
+                Belum ada proyek lokal. Tekan tombol di atas untuk membuat.
+            </div>
+        </div>
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchPage('home')">🏠<span>Home</span></div>
+            <div class="nav-item" onclick="switchPage('projects')">📁<span>Proyek</span></div>
+            <div class="nav-item" onclick="switchPage('editor')">🎬<span>Editor</span></div>
         </div>
     </div>
 
-    <div class="workspace">
-        <div class="canvas-box" id="canvasBox">
-            <span id="placeholderText" style="color: #45475a; font-size: 12px;">Belum Ada Video/Layer</span>
-            <video id="mainVideo" class="layer-item" autoplay loop muted playsinline></video>
-            <div id="maskShape" class="shape-mask"></div>
+    <div id="page-projects" class="page">
+        <div class="top-bar">
+            <div class="top-title">Daftar Proyek Video</div>
+            <button class="btn-export-act" onclick="switchPage('editor')">+ Baru</button>
+        </div>
+        <div class="project-grid">
+            <div class="project-card" onclick="switchPage('editor')">
+                <div class="project-thumb">🎬</div>
+                <div class="project-info">
+                    <div class="project-title">Sample_Render_1.mp4</div>
+                    <div class="project-date">10 Sep 2026 • Shake FX</div>
+                </div>
+            </div>
+            <div class="project-card" onclick="switchPage('editor')">
+                <div class="project-thumb">⚡</div>
+                <div class="project-info">
+                    <div class="project-title">Velocity_Edit.mp4</div>
+                    <div class="project-date">09 Sep 2026 • Velocity</div>
+                </div>
+            </div>
+        </div>
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="switchPage('home')">🏠<span>Home</span></div>
+            <div class="nav-item active" onclick="switchPage('projects')">📁<span>Proyek</span></div>
+            <div class="nav-item" onclick="switchPage('editor')">🎬<span>Editor</span></div>
         </div>
     </div>
 
-    <div class="controls-panel">
-        <div class="panel-row">
-            <button class="tool-btn active" onclick="setTab('fx')">Preset FX</button>
-            <button class="tool-btn" onclick="setTab('blend')">Blend & Mask</button>
-            <button class="tool-btn" onclick="setTab('transform')">Transform</button>
+    <div id="page-editor" class="page">
+        <div class="top-bar">
+            <button style="background:none; border:none; color:#a855f7; font-weight:bold; font-size:16px;" onclick="switchPage('home')">← Home</button>
+            <div class="top-title" style="font-size:14px;">Studio Editor</div>
+            <button class="btn-export-act" onclick="exportRender()">EXPORT</button>
         </div>
 
-        <div id="tab-fx" class="panel-row">
-            <select id="effectSelect" class="select-custom">
-                <option value="shake">Shake Effect (Guncang)</option>
-                <option value="velocity">Velocity / Speed Ramp</option>
-                <option value="tvrood_cc">TVROOD Color Grade CC</option>
-                <option value="glow">Glow Light FX</option>
-                <option value="flash">Flash Effect</option>
-            </select>
+        <div class="editor-workspace">
+            <div class="canvas-container">
+                <span id="blankText" style="color:#4b5563; font-size:12px;">Preview Layer Video</span>
+                <video id="videoPreview" class="video-layer" autoplay loop muted playsinline></video>
+            </div>
         </div>
 
-        <div id="tab-blend" class="panel-row" style="display: none;">
-            <select id="blendSelect" class="select-custom" onchange="updateBlendMode()">
-                <option value="normal">Mode: Normal</option>
-                <option value="multiply">Mode: Multiply</option>
-                <option value="screen">Mode: Screen</option>
-                <option value="overlay">Mode: Overlay</option>
-                <option value="exclusion">Mode: Exclusion / Mask</option>
-            </select>
-            <button class="tool-btn" onclick="toggleMaskShape()">Toggle Mask Circle</button>
+        <div class="editor-controls">
+            <div class="controls-row">
+                <button class="tool-btn active" onclick="document.getElementById('videoUploader').click()">+ Upload Video</button>
+                <button class="tool-btn">Blend Mode</button>
+                <button class="tool-btn">Preset FX</button>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:6px;">
+                <select id="effectSelect" class="select-input">
+                    <option value="shake">Effect: Shake (Guncang)</option>
+                    <option value="velocity">Effect: Velocity / Speed Ramp</option>
+                    <option value="tvrood_cc">Effect: TVROOD Color Grade</option>
+                    <option value="glow">Effect: Glow Light</option>
+                    <option value="flash">Effect: Flash FX</option>
+                </select>
+
+                <select id="blendSelect" class="select-input" onchange="changeBlend()">
+                    <option value="normal">Blend: Normal</option>
+                    <option value="multiply">Blend: Multiply</option>
+                    <option value="screen">Blend: Screen</option>
+                    <option value="overlay">Blend: Overlay</option>
+                    <option value="exclusion">Blend: Mask / Exclusion</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="timeline-section">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:#6b7280;">
+                <span>TRACK TIMELINE MULTI-LAYER</span>
+                <span>00:00 / 00:05</span>
+            </div>
+            <div class="track-list">
+                <div class="track track-v">🎥 Video Track (Layer 1)</div>
+                <div class="track track-fx">✨ Motion FX Track (Preset)</div>
+            </div>
         </div>
     </div>
 
-    <div class="timeline-container">
-        <div class="timeline-header">
-            <span>TIMELINE TRACKS</span>
-            <span id="timecode">00:00 / 00:10</span>
-        </div>
-        <div class="tracks-wrapper">
-            <div class="track track-video"><span>🎥 Layer Video (Primary)</span></div>
-            <div class="track track-effect"><span>✨ Effect Track (<span id="selectedFxName">Shake</span>)</span></div>
-            <div class="track track-mask" id="maskTrack" style="display: none;"><span>⭕ Mask Layer (Circle)</span></div>
-        </div>
-    </div>
-
-    <input type="file" id="videoUploader" accept="video/*" style="display: none;" onchange="handleVideoUpload(event)">
-
-    <div class="status-bar" id="statusText">Status: Ready (V1.0 Web Motion Engine)</div>
+    <input type="file" id="videoUploader" accept="video/*" style="display:none;" onchange="handleUpload(event)">
 
     <script>
-        function handleVideoUpload(e) {
+        // Hide Splash Screen setelah 1.5 detik
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('loading-screen');
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }, 1200);
+        });
+
+        // Switch Halaman (SPA Navigation)
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+
+            // Update Bottom Nav active state
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        }
+
+        function handleUpload(e) {
             const file = e.target.files[0];
             if (file) {
-                const video = document.getElementById('mainVideo');
-                video.src = URL.createObjectURL(file);
-                document.getElementById('placeholderText').style.display = 'none';
-                document.getElementById('statusText').innerText = 'Video dimuat: ' + file.name;
+                const vid = document.getElementById('videoPreview');
+                vid.src = URL.createObjectURL(file);
+                document.getElementById('blankText').style.display = 'none';
             }
         }
 
-        function setTab(tabName) {
-            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            document.getElementById('tab-fx').style.display = tabName === 'fx' ? 'flex' : 'none';
-            document.getElementById('tab-blend').style.display = tabName === 'blend' ? 'flex' : 'none';
-        }
-
-        function updateBlendMode() {
-            const val = document.getElementById('blendSelect').value;
-            document.getElementById('mainVideo').style.mixBlendMode = val;
-        }
-
-        function toggleMaskShape() {
-            const mask = document.getElementById('maskShape');
-            const track = document.getElementById('maskTrack');
-            if (mask.style.display === 'block') {
-                mask.style.display = 'none';
-                track.style.display = 'none';
-            } else {
-                mask.style.display = 'block';
-                track.style.display = 'flex';
-            }
+        function changeBlend() {
+            const mode = document.getElementById('blendSelect').value;
+            document.getElementById('videoPreview').style.mixBlendMode = mode;
         }
 
         async function exportRender() {
             const effect = document.getElementById('effectSelect').value;
             const blend = document.getElementById('blendSelect').value;
-            const status = document.getElementById('statusText');
-
-            status.innerText = 'Render di VPS sedang diproses... Mohon tunggu.';
+            alert('Proses Render di VPS dimulai untuk efek: ' + effect);
 
             try {
                 const res = await fetch('/api/render', {
@@ -166,12 +226,12 @@
                 });
 
                 if (res.ok) {
-                    status.innerText = 'Render Selesai! File tersimpan di VPS.';
+                    alert('Render Selesai di VPS!');
                 } else {
-                    status.innerText = 'Render Gagal!';
+                    alert('Gagal Render!');
                 }
             } catch (err) {
-                status.innerText = 'Gagal terhubung ke Server VPS.';
+                alert('Error Koneksi ke VPS!');
             }
         }
     </script>
