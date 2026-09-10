@@ -2,38 +2,156 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zuxcyn Motion Cloud Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zuxcyn Motion - Studio Editor</title>
     <style>
-        body { background: #121212; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
-        .card { background: #1f1f1f; padding: 20px; border-radius: 12px; max-width: 400px; margin: 0 auto; border: 1px solid #bb86fc; }
-        select, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; font-size: 16px; }
-        select { background: #2c2c2c; color: white; }
-        button { background: #bb86fc; color: black; font-weight: bold; cursor: pointer; }
-        #status { margin-top: 15px; color: #03dac6; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #0d0e12; color: #e1e1e6; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* TOP NAVBAR */
+        .navbar { height: 48px; background: #16181e; border-bottom: 1px solid #272a36; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
+        .brand { font-weight: 800; font-size: 14px; letter-spacing: 1px; color: #a855f7; display: flex; align-items: center; gap: 6px; }
+        .nav-actions { display: flex; gap: 8px; }
+        .btn-nav { background: #272a36; border: none; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .btn-export-top { background: linear-gradient(135deg, #a855f7, #6366f1); }
+
+        /* WORKSPACE / CANVAS */
+        .workspace { flex: 1; display: flex; align-items: center; justify-content: center; background: #050507; position: relative; overflow: hidden; padding: 10px; }
+        .canvas-box { width: 100%; max-width: 360px; height: 100%; max-height: 360px; background: #121318; border: 2px dashed #323644; border-radius: 12px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        
+        /* LAYERS IN CANVAS */
+        .layer-item { position: absolute; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+        .shape-mask { position: absolute; width: 150px; height: 150px; border-radius: 50%; background: rgba(56, 189, 248, 0.4); border: 2px solid #38bdf8; display: none; }
+
+        /* CONTROL PANELS (MID TOOLBAR) */
+        .controls-panel { background: #16181e; border-top: 1px solid #272a36; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .panel-row { display: flex; gap: 8px; align-items: center; overflow-x: auto; padding-bottom: 4px; }
+        .panel-row::-webkit-scrollbar { display: none; }
+
+        .tool-btn { background: #20232d; border: 1px solid #2c303e; color: #9a9caf; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+        .tool-btn.active { background: #a855f7; color: #fff; border-color: #a855f7; }
+
+        .select-custom { background: #20232d; border: 1px solid #2c303e; color: #fff; padding: 8px; border-radius: 8px; font-size: 12px; outline: none; flex: 1; }
+
+        /* TIMELINE TRACKS */
+        .timeline-container { height: 160px; background: #0d0e12; border-top: 1px solid #272a36; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+        .timeline-header { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #6c7086; }
+        .tracks-wrapper { flex: 1; background: #121318; border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+        
+        .track { height: 32px; background: #1d202a; border-radius: 6px; border: 1px solid #2a2e3d; display: flex; align-items: center; padding: 0 10px; font-size: 11px; font-weight: 600; color: #a6adc8; position: relative; }
+        .track-video { border-left: 4px solid #a855f7; }
+        .track-effect { border-left: 4px solid #38bdf8; }
+        .track-mask { border-left: 4px solid #f38ba8; }
+
+        /* STATUS FOOTER */
+        .status-bar { height: 24px; background: #08080a; font-size: 10px; color: #38bdf8; display: flex; align-items: center; justify-content: center; border-top: 1px solid #1a1b23; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>Zuxcyn Motion</h2>
-        <p>Render Engine Cloud</p>
-        <label>Pilih Efek:</label>
-        <select id="effect">
-            <option value="shake">Shake</option>
-            <option value="velocity">Velocity</option>
-            <option value="tvrood_cc">TVROOD CC</option>
-            <option value="glow">Glow</option>
-            <option value="flash">Flash</option>
-        </select>
-        <button onclick="renderVideo()">EXPORT VIDEO</button>
-        <div id="status">Status: Siap</div>
+
+    <div class="navbar">
+        <div class="brand"><span>⚡</span> ZUXCYN STUDIO</div>
+        <div class="nav-actions">
+            <button class="btn-nav" onclick="document.getElementById('videoUploader').click()">+ Layer</button>
+            <button class="btn-nav btn-export-top" onclick="exportRender()">EXPORT</button>
+        </div>
     </div>
 
+    <div class="workspace">
+        <div class="canvas-box" id="canvasBox">
+            <span id="placeholderText" style="color: #45475a; font-size: 12px;">Belum Ada Video/Layer</span>
+            <video id="mainVideo" class="layer-item" autoplay loop muted playsinline></video>
+            <div id="maskShape" class="shape-mask"></div>
+        </div>
+    </div>
+
+    <div class="controls-panel">
+        <div class="panel-row">
+            <button class="tool-btn active" onclick="setTab('fx')">Preset FX</button>
+            <button class="tool-btn" onclick="setTab('blend')">Blend & Mask</button>
+            <button class="tool-btn" onclick="setTab('transform')">Transform</button>
+        </div>
+
+        <div id="tab-fx" class="panel-row">
+            <select id="effectSelect" class="select-custom">
+                <option value="shake">Shake Effect (Guncang)</option>
+                <option value="velocity">Velocity / Speed Ramp</option>
+                <option value="tvrood_cc">TVROOD Color Grade CC</option>
+                <option value="glow">Glow Light FX</option>
+                <option value="flash">Flash Effect</option>
+            </select>
+        </div>
+
+        <div id="tab-blend" class="panel-row" style="display: none;">
+            <select id="blendSelect" class="select-custom" onchange="updateBlendMode()">
+                <option value="normal">Mode: Normal</option>
+                <option value="multiply">Mode: Multiply</option>
+                <option value="screen">Mode: Screen</option>
+                <option value="overlay">Mode: Overlay</option>
+                <option value="exclusion">Mode: Exclusion / Mask</option>
+            </select>
+            <button class="tool-btn" onclick="toggleMaskShape()">Toggle Mask Circle</button>
+        </div>
+    </div>
+
+    <div class="timeline-container">
+        <div class="timeline-header">
+            <span>TIMELINE TRACKS</span>
+            <span id="timecode">00:00 / 00:10</span>
+        </div>
+        <div class="tracks-wrapper">
+            <div class="track track-video"><span>🎥 Layer Video (Primary)</span></div>
+            <div class="track track-effect"><span>✨ Effect Track (<span id="selectedFxName">Shake</span>)</span></div>
+            <div class="track track-mask" id="maskTrack" style="display: none;"><span>⭕ Mask Layer (Circle)</span></div>
+        </div>
+    </div>
+
+    <input type="file" id="videoUploader" accept="video/*" style="display: none;" onchange="handleVideoUpload(event)">
+
+    <div class="status-bar" id="statusText">Status: Ready (V1.0 Web Motion Engine)</div>
+
     <script>
-        async function renderVideo() {
-            const effect = document.getElementById('effect').value;
-            const status = document.getElementById('status');
-            status.innerText = 'Status: Sedang Render di VPS...';
+        function handleVideoUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const video = document.getElementById('mainVideo');
+                video.src = URL.createObjectURL(file);
+                document.getElementById('placeholderText').style.display = 'none';
+                document.getElementById('statusText').innerText = 'Video dimuat: ' + file.name;
+            }
+        }
+
+        function setTab(tabName) {
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.getElementById('tab-fx').style.display = tabName === 'fx' ? 'flex' : 'none';
+            document.getElementById('tab-blend').style.display = tabName === 'blend' ? 'flex' : 'none';
+        }
+
+        function updateBlendMode() {
+            const val = document.getElementById('blendSelect').value;
+            document.getElementById('mainVideo').style.mixBlendMode = val;
+        }
+
+        function toggleMaskShape() {
+            const mask = document.getElementById('maskShape');
+            const track = document.getElementById('maskTrack');
+            if (mask.style.display === 'block') {
+                mask.style.display = 'none';
+                track.style.display = 'none';
+            } else {
+                mask.style.display = 'block';
+                track.style.display = 'flex';
+            }
+        }
+
+        async function exportRender() {
+            const effect = document.getElementById('effectSelect').value;
+            const blend = document.getElementById('blendSelect').value;
+            const status = document.getElementById('statusText');
+
+            status.innerText = 'Render di VPS sedang diproses... Mohon tunggu.';
 
             try {
                 const res = await fetch('/api/render', {
@@ -42,13 +160,18 @@
                     body: JSON.stringify({
                         inputPath: 'sample.mp4',
                         outputPath: 'result_' + effect + '.mp4',
-                        effect: effect
+                        effect: effect,
+                        blendMode: blend
                     })
                 });
-                const data = await res.json();
-                status.innerText = res.ok ? 'Status: Render Selesai!' : 'Status: Gagal - ' + data.message;
+
+                if (res.ok) {
+                    status.innerText = 'Render Selesai! File tersimpan di VPS.';
+                } else {
+                    status.innerText = 'Render Gagal!';
+                }
             } catch (err) {
-                status.innerText = 'Status: Error Koneksi';
+                status.innerText = 'Gagal terhubung ke Server VPS.';
             }
         }
     </script>
