@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zuxcyn Motion Cloud Editor</title>
+    <style>
+        body { background: #121212; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
+        .card { background: #1f1f1f; padding: 20px; border-radius: 12px; max-width: 400px; margin: 0 auto; border: 1px solid #bb86fc; }
+        select, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; font-size: 16px; }
+        select { background: #2c2c2c; color: white; }
+        button { background: #bb86fc; color: black; font-weight: bold; cursor: pointer; }
+        #status { margin-top: 15px; color: #03dac6; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Zuxcyn Motion</h2>
+        <p>Render Engine Cloud</p>
+        <label>Pilih Efek:</label>
+        <select id="effect">
+            <option value="shake">Shake</option>
+            <option value="velocity">Velocity</option>
+            <option value="tvrood_cc">TVROOD CC</option>
+            <option value="glow">Glow</option>
+            <option value="flash">Flash</option>
+        </select>
+        <button onclick="renderVideo()">EXPORT VIDEO</button>
+        <div id="status">Status: Siap</div>
+    </div>
+
+    <script>
+        async function renderVideo() {
+            const effect = document.getElementById('effect').value;
+            const status = document.getElementById('status');
+            status.innerText = 'Status: Sedang Render di VPS...';
+
+            try {
+                const res = await fetch('/api/render', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        inputPath: 'sample.mp4',
+                        outputPath: 'result_' + effect + '.mp4',
+                        effect: effect
+                    })
+                });
+                const data = await res.json();
+                status.innerText = res.ok ? 'Status: Render Selesai!' : 'Status: Gagal - ' + data.message;
+            } catch (err) {
+                status.innerText = 'Status: Error Koneksi';
+            }
+        }
+    </script>
+</body>
+</html>
